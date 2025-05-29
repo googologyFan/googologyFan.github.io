@@ -1,0 +1,52 @@
+<header>
+  <div class="header-left">
+    <a href="/index.html">kαmμ</a>
+  </div>
+  <nav class="header-right">
+    <a href="/sites/history.html">History</a>
+    <a href="/sites/updates.html">Updates</a>
+    <a href="/sites/profile.html">Profile</a>
+  </nav>
+</header>
+<style>
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 56px;
+    background: #000;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(8px);
+  }
+  .header-left {
+    margin-left: 2rem;
+    font-weight: bold;
+    font-size: 1.3rem;
+  }
+  .header-left a {
+    color: #fff;
+    text-decoration: none;
+    font-family: "Segoe UI", "Meiryo", sans-serif;
+  }
+  .header-right {
+    margin-right: 2rem;
+    display: flex;
+    gap: 2rem;
+  }
+  .header-right a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: color 0.2s;
+  }
+  .header-right a:hover {
+    color: #4eaaff;
+  }
+</style>

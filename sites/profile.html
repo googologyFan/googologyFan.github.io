@@ -3,36 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Googology Fan ホームページ</title>
-    <link rel="stylesheet" href="css/default.css" />
+    <title>Profile - Googology Fan</title>
+    <link rel="stylesheet" href="../css/default.css" />
   </head>
   <body>
     <div id="header-container"></div>
     <div id="main-container">
       <main>
-        <h2>このサイトについて</h2>
-        <p>
-          このホームページは、グーゴロジー（巨大数の研究）を愛するファンのための情報発信サイトです。<br />
-          数学の面白さや、想像を超える巨大な数について紹介していきます。
-        </p>
-        <h2>コンテンツ</h2>
-        <ul>
-          <li>グーゴロジーとは？</li>
-          <li>有名な巨大数の紹介</li>
-          <li>巨大数の表記法</li>
-          <li>おすすめ書籍・リンク集</li>
-        </ul>
-        <h2>お問い合わせ</h2>
-        <p>
-          ご意見・ご感想は
-          <a href="mailto:googology.fan@gmail.com">メール</a> でお寄せください。
-        </p>
+        <h2>Profile</h2>
+        <p>このページは管理人のプロフィールを掲載する予定です。</p>
       </main>
     </div>
     <div id="footer-container"></div>
     <script>
       window.addEventListener("DOMContentLoaded", () => {
-        fetch("common/header.html")
+        fetch("../common/header.html")
           .then((res) => {
             if (!res.ok) throw new Error("header.html fetch failed");
             return res.text();
@@ -50,7 +35,7 @@
               e.message +
               "</div>";
           });
-        fetch("common/footer.html")
+        fetch("../common/footer.html")
           .then((res) => {
             if (!res.ok) throw new Error("footer.html fetch failed");
             return res.text();
