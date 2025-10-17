@@ -3,43 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>kαmμ</title>
-    <link rel="stylesheet" href="css/default.css" />
+    <title>History - Googology Fan</title>
+    <link rel="stylesheet" href="../css/default.css" />
   </head>
   <body>
     <div id="header-container"></div>
     <div id="main-container">
       <main>
-        <h1>kαmμのHP</h1>
-        <hr />
-        かみゅ～って読んでね <br />
-        Unfixed公式はこちら →
-        <a href="https://example.com">url準備中</a><br /><br />
-        <span id="links-X">
-          <h2>リンク</h2>
-          <hr />
-          <h3>Twitter</h3>
-          <ul>
-            <li><a href="https://x.com/kammyu_unfixed">kαmμ</a></li>
-            <li><a href="https://x.com/UFX_official">Unfixed</a></li>
-          </ul>
-          <br />
-          <h3>Youtube</h3>
-          <ul>
-            <li><a href="https://www.youtube.com/@kammyu_unfixed">kαmμ</a></li>
-          </ul>
-          <br />
-          <h3>そ の他</h3>
-          <ul>
-            <li><a href="https://flat.io/@absolute_pitcher/">flat</a></li>
-          </ul>
-        </span>
+        <h2>Diary</h2>
+        <p>このページは日記をまとめる場所です。</p>
+        <ul>
+          <li><a href="./diary/25_10_13.html">高専プロコン2025参加記</a></li>
+        </ul>
       </main>
     </div>
     <div id="footer-container"></div>
     <script>
       window.addEventListener("DOMContentLoaded", () => {
-        fetch("common/header.html")
+        fetch("../common/header.html")
           .then((res) => {
             if (!res.ok) throw new Error("header.html fetch failed");
             return res.text();
@@ -57,7 +38,7 @@
               e.message +
               "</div>";
           });
-        fetch("common/footer.html")
+        fetch("../common/footer.html")
           .then((res) => {
             if (!res.ok) throw new Error("footer.html fetch failed");
             return res.text();

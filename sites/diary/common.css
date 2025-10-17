@@ -1,0 +1,64 @@
+.main-container {
+  max-width: 8000px;
+  margin: 6rem 15% -1rem 15%;
+  background: #ffffff10;
+  border-radius: 8px;
+  box-shadow: 0 0px 10px #aaaaff;
+  padding: 2rem 3rem;
+  flex: 1 0 auto;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+}
+
+.date-container {
+  text-align: right;
+}
+.date {
+  color: #aaa;
+}
+ol {
+  padding-left: 0;
+}
+blockquote {
+  background-color: #00000033;
+  border-radius: 5px;
+  padding: 1rem;
+}
+.blockquote-line {
+  border-left: 4px solid #8888ff55;
+  margin: 0;
+  margin-left: 0.3rem;
+  padding-left: 1rem;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
+}
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  background-color: #00000055;
+  border-radius: 5px;
+  padding: 0.1rem;
+}
+.align-center {
+  text-align: center;
+}
+.details {
+  font-size: 0.8rem;
+  color: #999999;
+  margin: 0;
+}
+div {
+  margin-top: 0.3rem;
+}
+em {
+  font-style: italic;
+}
