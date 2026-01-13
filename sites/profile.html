@@ -1,77 +1,73 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Profile - kαmμ</title>
-    <link rel="stylesheet" href="../css/default.css" />
-    <script></script>
-  </head>
-  <body>
-    <div id="header-container"></div>
-    <div id="main-container">
-      <main>
-        <!-- <h1>Profile</h1> -->
-        <h1>kαmμ（かみゅ～）</h1>
-        <hr />
-        <p>
-          2008年生まれで、現在は
-          <a href="https://www.nagaoka-ct.ac.jp/" target="_blank"
-            >長岡工業高等専門学校（長岡高専）</a
-          >
-          に在籍。<br />
-          プログラミングやゲームについて主に活動している組織「Unfixed」に所属。<br />
-          AtCoder（<a href="https://atcoder.jp/users/googology" target="_blank"
-            >googology</a
-          >）: A:<span style="color: #008000">緑</span>, H:青
-          <br />
-          X（旧Twitter）:
-          <a href="https://x.com/kammyu_unfixed" target="_blank"
-            >@kammyu_unfixed</a
-          >
-        </p>
-      </main>
-    </div>
-    <div id="footer-container"></div>
-    <script>
-      window.addEventListener("DOMContentLoaded", () => {
-        fetch("../common/header.html")
-          .then((res) => {
-            if (!res.ok) throw new Error("header.html fetch failed");
-            return res.text();
-          })
-          .then((html) => {
-            document.getElementById("header-container").innerHTML = html;
-            const temp = document.createElement("div");
-            temp.innerHTML = html;
-            const style = temp.querySelector("style");
-            if (style) document.head.appendChild(style);
-          })
-          .catch((e) => {
-            document.getElementById("header-container").innerHTML =
-              '<div style="color:red">ヘッダの読み込みに失敗しました: ' +
-              e.message +
-              "</div>";
-          });
-        fetch("../common/footer.html")
-          .then((res) => {
-            if (!res.ok) throw new Error("footer.html fetch failed");
-            return res.text();
-          })
-          .then((html) => {
-            document.getElementById("footer-container").innerHTML = html;
-            const temp = document.createElement("div");
-            temp.innerHTML = html;
-            const style = temp.querySelector("style");
-            if (style) document.head.appendChild(style);
-          })
-          .catch((e) => {
-            document.getElementById("footer-container").innerHTML =
-              '<div style="color:red">フッタの読み込みに失敗しました: ' +
-              e.message +
-              "</div>";
-          });
-      });
-    </script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile - kαmμ</title>
+  <link rel="stylesheet" href="../css/default.css" />
+  <script></script>
+</head>
+
+<body>
+  <div id="header-container"></div>
+  <div id="main-container">
+    <main>
+      <!-- <h1>Profile</h1> -->
+      <h1>kαmμ（かみゅ～）</h1>
+      <hr />
+      <p>
+        現在は某大花火大会高専に在籍。<br />
+        プログラミングやゲームについて主に活動している組織「Unfixed」に所属。<br />
+        AtCoder（<a href="https://atcoder.jp/users/googology" target="_blank">googology</a>）: A:<span
+          style="color: #00C0C0">水</span>, H:<span style="color: #0000FF">青</span>
+        <br />
+        X（旧Twitter）:
+        <a href="https://x.com/kammyu_unfixed" target="_blank">@kammyu_unfixed</a>
+      </p>
+    </main>
+  </div>
+  <div id="footer-container"></div>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      fetch("../common/header.html")
+        .then((res) => {
+          if (!res.ok) throw new Error("header.html fetch failed");
+          return res.text();
+        })
+        .then((html) => {
+          document.getElementById("header-container").innerHTML = html;
+          const temp = document.createElement("div");
+          temp.innerHTML = html;
+          const style = temp.querySelector("style");
+          if (style) document.head.appendChild(style);
+        })
+        .catch((e) => {
+          document.getElementById("header-container").innerHTML =
+            '<div style="color:red">ヘッダの読み込みに失敗しました: ' +
+            e.message +
+            "</div>";
+        });
+      fetch("../common/footer.html")
+        .then((res) => {
+          if (!res.ok) throw new Error("footer.html fetch failed");
+          return res.text();
+        })
+        .then((html) => {
+          document.getElementById("footer-container").innerHTML = html;
+          const temp = document.createElement("div");
+          temp.innerHTML = html;
+          const style = temp.querySelector("style");
+          if (style) document.head.appendChild(style);
+        })
+        .catch((e) => {
+          document.getElementById("footer-container").innerHTML =
+            '<div style="color:red">フッタの読み込みに失敗しました: ' +
+            e.message +
+            "</div>";
+        });
+    });
+  </script>
+</body>
+
 </html>

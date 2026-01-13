@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hexagon Merge Visualizer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f3f4f6;
+    }
+
+    canvas {
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #555;
+    }
+
+    input[type=range] {
+      accent-color: #4f46e5;
+    }
+  </style>
+</head>
+
+<body class="h-screen flex flex-col p-4 overflow-hidden">
+  <a href="/" style="position: fixed; left: 25px; bottom: 25px;">トップへ</a>
+  <a href="https://yukicoder.me/problems/13044" style="position: fixed; left: 100px; bottom: 25px;">問題文</a>
+
+  <!-- Header -->
+  <header class="flex justify-between items-center mb-4 shrink-0">
+    <h1 class="text-2xl font-bold text-gray-800">Hexagon Merge Visualizer (N=15)</h1>
+    <div class="flex items-center space-x-4">
+      <label
+        class="flex items-center space-x-2 bg-white px-3 py-2 rounded shadow cursor-pointer select-none hover:bg-gray-50 transition">
+        <input type="checkbox" id="showNumbersBtn" checked
+          class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+        <span class="text-xs font-semibold text-gray-700">Show Numbers</span>
+      </label>
+      <div class="bg-white px-4 py-2 rounded shadow flex flex-col items-end">
+        <span class="text-xs text-gray-500 uppercase font-semibold">Current Cost</span>
+        <span id="scoreDisplay" class="text-xl font-mono font-bold text-indigo-600">0</span>
+      </div>
+      <div class="bg-white px-4 py-2 rounded shadow flex flex-col items-end">
+        <span class="text-xs text-gray-500 uppercase font-semibold">Turn</span>
+        <span id="turnDisplayInfo" class="text-xl font-mono font-bold text-gray-800">0 / 0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="flex flex-1 gap-4 overflow-hidden">
+
+    <!-- Left Panel: Controls & I/O -->
+    <div class="w-1/3 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2">
+
+      <!-- Input Generation -->
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-sm font-bold text-gray-700 mb-2 uppercase border-b pb-1">Input Generation</h2>
+        <div class="flex gap-2 mb-2">
+          <div class="flex-1">
+            <label class="block text-xs text-gray-500">Seed</label>
+            <input type="number" id="seedInput" value="1"
+              class="w-full border rounded px-2 py-1 text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+        </div>
+        <div class="text-xs text-gray-500 mt-1">
+          <p>※ マウスホイールで拡大縮小、ドラッグで移動できます。</p>
+        </div>
+      </div>
+
+      <!-- Editors -->
+      <div class="bg-white p-4 rounded-lg shadow flex-1 flex flex-col min-h-[300px]">
+        <h2 class="text-sm font-bold text-gray-700 mb-2 uppercase border-b pb-1">Standard Input</h2>
+        <textarea id="inputText"
+          class="w-full flex-1 border rounded p-2 text-xs font-mono resize-none focus:ring-2 focus:ring-indigo-500 outline-none mb-4 custom-scrollbar"
+          placeholder="Paste input here or generate..."></textarea>
+
+        <h2 class="text-sm font-bold text-gray-700 mb-2 uppercase border-b pb-1">Standard Output</h2>
+        <textarea id="outputText"
+          class="w-full flex-1 border rounded p-2 text-xs font-mono resize-none focus:ring-2 focus:ring-indigo-500 outline-none custom-scrollbar"
+          placeholder="Paste solver output here..."></textarea>
+
+        <!-- Static load error (format etc.) -->
+        <p id="errorMsg" class="text-red-500 text-xs mt-2 min-h-[1.5em] font-bold"></p>
+      </div>
+    </div>
+
+    <!-- Right Panel: Visualization -->
+    <div class="w-2/3 flex flex-col bg-white rounded-lg shadow p-4 relative">
+      <!-- Canvas Container -->
+      <div class="flex-1 relative bg-gray-50 flex items-center justify-center overflow-hidden border rounded mb-4"
+        id="canvasContainer">
+        <canvas id="mainCanvas"></canvas>
+      </div>
+
+      <!-- Playback Controls -->
+      <div class="flex flex-col border-t pt-2">
+        <div class="flex items-center gap-4 h-10">
+          <button id="playPauseBtn"
+            class="w-10 h-10 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-full transition text-gray-700 shrink-0">
+            <svg id="iconPlay" class="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M4 4l12 6-12 6z" />
+            </svg>
+            <svg id="iconPause" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
+                clip-rule="evenodd" />
+            </svg>
+          </button>
+
+          <div class="flex-1 flex flex-col justify-center">
+            <input type="range" id="turnSlider" min="0" max="0" value="0"
+              class="w-full cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none">
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Start</span>
+              <span id="sliderMaxLabel">End</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button id="prevBtn" class="p-2 bg-gray-100 hover:bg-gray-200 rounded transition text-gray-600">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" />
+              </svg>
+            </button>
+            <input type="number" id="turnInput" value="0"
+              class="w-20 border rounded px-2 py-1 text-center font-mono text-sm">
+            <button id="nextBtn" class="p-2 bg-gray-100 hover:bg-gray-200 rounded transition text-gray-600">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="flex flex-col items-end w-24 shrink-0">
+            <label class="text-[10px] text-gray-500 font-bold uppercase">Speed</label>
+            <input type="range" id="speedSlider" min="1" max="100" value="10"
+              class="w-full h-1 bg-gray-300 rounded appearance-none">
+          </div>
+        </div>
+        <!-- Runtime Error Message -->
+        <div id="runtimeErrorMsg" class="text-red-600 font-bold text-sm mt-2 text-center min-h-[1.5em]"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      /**
+       * 疑似乱数生成器 (Linear Congruential Generator)
+       * C++のstd::minstd_randと同じパラメータを使用
+       */
+      class Random {
+        constructor(seed = 1) {
+          this.x = BigInt(seed);
+          this.mod = 2147483647n;
+          this.mul = 48271n;
+        }
+
+        next() {
+          this.x = (this.x * this.mul) % this.mod;
+          return Number(this.x);
+        }
+
+        // [min, max] の整数を返す
+        nextInt(min, max) {
+          return (this.next() % (max - min + 1)) + min;
+        }
+
+        // Fisher-Yates shuffle
+        shuffle(array) {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = this.next() % (i + 1);
+            [array[i], array[j]] = [array[j], array[i]];
+          }
+          return array;
+        }
+      }
+
+      /**
+       * 六角形グリッドロジック
+       */
+      const N = 15;
+      const MAX_VAL = 3 * N * (N - 1) + 1;
+
+      // 六角形の描画座標計算
+      // pointy-topped hexagons
+      // Width = sqrt(3) * size
+      // Height = 2 * size
+      // 水平方向の間隔: w
+      // 垂直方向の間隔: h * 3/4
+      function getHexCenter(i, j, size, offsetX, offsetY) {
+        const w = Math.sqrt(3) * size;
+        const h = 2 * size;
+
+        // 座標系:
+        // (0,0) を基準にする。
+        // iが増えると、左下に移動 (-w/2, h*3/4)
+        // jが増えると、右に移動 (w, 0)
+
+        // 原点からの変位
+        const dx = j * w - i * (w / 2);
+        const dy = i * (h * 0.75);
+
+        return {
+          x: offsetX + dx,
+          y: offsetY + dy
+        };
+      }
+
+      // データ管理クラス
+      class StateManager {
+        constructor() {
+          this.initialGrid = []; // [row][col] -> value
+          this.ops = []; // {type, px, py, qx, qy}
+          this.keyframes = []; // Snapshots for fast seeking
+          this.maxTurn = 0;
+          this.validCoords = new Set();
+          this.coordList = [];
+          this.runtimeError = null; // { turn: number, msg: string }
+        }
+
+        initGrid(values) {
+          // values is a 1D array of generated numbers
+          this.initialGrid = [];
+          this.validCoords.clear();
+          this.coordList = [];
+
+          let idx = 0;
+          for (let i = 0; i < 2 * N - 1; i++) {
+            this.initialGrid[i] = [];
+            // j starts from max(0, i - (N-1))
+            // j ends at min(2N-2, i + N - 1)
+            const startJ = Math.max(0, i - (N - 1));
+            const endJ = Math.min(2 * N - 2, i + N - 1);
+
+            for (let j = startJ; j <= endJ; j++) {
+              this.initialGrid[i][j] = values[idx++];
+              this.validCoords.add(`${i},${j}`);
+              this.coordList.push({ i, j });
+            }
+          }
+        }
+
+        loadOps(text) {
+          this.ops = [];
+          this.runtimeError = null;
+          const trimmed = text.trim();
+
+          if (trimmed.length > 0) {
+            const lines = trimmed.split(/\n+/);
+
+            // 最初の行はTかもしれないが、無視して読み込む
+            let startIndex = 0;
+            if (lines[0].trim().match(/^\d+$/) && lines[0].trim().split(/\s+/).length === 1) {
+              startIndex = 1;
+            }
+
+            for (let k = startIndex; k < lines.length; k++) {
+              const parts = lines[k].trim().split(/\s+/).map(Number);
+              // フォーマットチェック
+              if (parts.length < 5 || (parts[0] !== 1 && parts[0] !== 2)) {
+                this.runtimeError = { turn: this.ops.length + 1, msg: "操作のフォーマットが無効です" };
+                // Stop parsing or just continue to validate strictly later?
+                // Let's store raw ops if possible or mark invalid.
+                // If invalid format, we can't really parse.
+                // Let's skip and mark error.
+                // But we want to visualize up to the error, so break loop.
+                break;
+              }
+              const [t, px, py, qx, qy] = parts;
+              this.ops.push({ t, px, py, qx, qy });
+            }
+          }
+
+          this.maxTurn = this.ops.length;
+
+          // Validate Logic (Dry Run)
+          this.validateOps();
+
+          // Always build keyframes (at least for turn 0) even if ops is empty
+          this.buildKeyframes();
+        }
+
+        validateOps() {
+          if (this.runtimeError) return;
+
+          let parent = new Map();
+          let mergeCount = 0;
+          const neighborOffsets = [
+            { di: -1, dj: -1 }, { di: -1, dj: 0 },
+            { di: 0, dj: -1 }, { di: 0, dj: 1 },
+            { di: 1, dj: 0 }, { di: 1, dj: 1 }
+          ];
+
+          for (const { i, j } of this.coordList) {
+            const key = `${i},${j}`;
+            parent.set(key, key);
+          }
+
+          const find = (key) => {
+            let curr = key;
+            while (parent.get(curr) !== curr) curr = parent.get(curr);
+            // Path compression on dry run ok
+            let root = curr;
+            curr = key;
+            while (parent.get(curr) !== curr) {
+              let next = parent.get(curr);
+              parent.set(curr, root);
+              curr = next;
+            }
+            return root;
+          };
+
+          for (let k = 0; k < this.ops.length; k++) {
+            const op = this.ops[k];
+            const pKey = `${op.px},${op.py}`;
+            const qKey = `${op.qx},${op.qy}`;
+
+            // 座標有効チェック
+            if (!this.validCoords.has(pKey) || !this.validCoords.has(qKey)) {
+              this.runtimeError = { turn: k + 1, msg: "座標が無効です" };
+              return;
+            }
+
+            // 隣接チェック (座標p, qが隣接しているか)
+            let isAdj = false;
+            for (const off of neighborOffsets) {
+              if (op.px + off.di === op.qx && op.py + off.dj === op.qy) {
+                isAdj = true;
+                break;
+              }
+            }
+            if (!isAdj) {
+              this.runtimeError = { turn: k + 1, msg: "隣接していません" };
+              return;
+            }
+
+            const rootP = find(pKey);
+            const rootQ = find(qKey);
+
+            if (op.t === 1) { // Merge
+              if (rootP === rootQ) {
+                this.runtimeError = { turn: k + 1, msg: "既にmergeされています" };
+                return;
+              }
+              parent.set(rootQ, rootP);
+              mergeCount++;
+            }
+            // Swap does not change structure
+          }
+
+          // 最終チェック: merge操作が足りているか
+          // Total cells = MAX_VAL (actually 3N(N-1)+1). 
+          // Required merges = Total cells - 1.
+          // But problem says "3N(N-1)回". Max cells is 3N(N-1)+1. 
+          // So yes, exactly all cells must be merged into 1.
+          // Using MAX_VAL as count of cells.
+          if (mergeCount < MAX_VAL - 1) {
+            // Warning rather than error? Or strict? 
+            // Request says "merge操作が足りません"
+            this.runtimeError = { turn: this.ops.length, msg: "merge操作が足りません" };
+          }
+        }
+
+        // 状態のスナップショットを作成 (Union-Find + 現在の値)
+        buildKeyframes() {
+          this.keyframes = [];
+          const INTERVAL = 500; // 500ターンごとに保存
+
+          // 初期状態
+          let parent = new Map();
+          let currentValues = new Map(); // root -> value
+          let totalCost = 0;
+
+          // Initialize DSU and Values
+          for (const { i, j } of this.coordList) {
+            const key = `${i},${j}`;
+            parent.set(key, key);
+            currentValues.set(key, this.initialGrid[i][j]);
+          }
+
+          const find = (key) => {
+            let curr = key;
+            while (parent.get(curr) !== curr) curr = parent.get(curr);
+            let root = curr;
+            curr = key;
+            while (parent.get(curr) !== curr) { // Path compression
+              let next = parent.get(curr);
+              parent.set(curr, root);
+              curr = next;
+            }
+            return root;
+          };
+
+          // Snapshot 0
+          this.keyframes.push({
+            turn: 0,
+            parent: new Map(parent),
+            values: new Map(currentValues),
+            cost: 0
+          });
+
+          // Simulate
+          for (let k = 0; k < this.ops.length; k++) {
+            const op = this.ops[k];
+            const pKey = `${op.px},${op.py}`;
+            const qKey = `${op.qx},${op.qy}`;
+
+            // If we had validation error, we still simulate up to that point or robustly?
+            // Let's assume validation is display-only and we try to run robustly.
+            if (!this.validCoords.has(pKey) || !this.validCoords.has(qKey)) continue;
+
+            const rootP = find(pKey);
+            const rootQ = find(qKey);
+            const valP = currentValues.get(rootP);
+            const valQ = currentValues.get(rootQ);
+
+            if (op.t === 1) { // Merge
+              totalCost += Math.abs(valP - valQ);
+              if (rootP !== rootQ) {
+                parent.set(rootQ, rootP);
+                currentValues.set(rootP, valP + valQ);
+              }
+            } else if (op.t === 2) { // Swap
+              totalCost += Math.min(valP, valQ);
+              currentValues.set(rootP, valQ);
+              currentValues.set(rootQ, valP);
+            }
+
+            if ((k + 1) % INTERVAL === 0) {
+              this.keyframes.push({
+                turn: k + 1,
+                parent: new Map(parent),
+                values: new Map(currentValues),
+                cost: totalCost
+              });
+            }
+          }
+        }
+
+        // 指定されたターンの状態を取得
+        getState(targetTurn) {
+          if (targetTurn < 0) targetTurn = 0;
+          if (targetTurn > this.maxTurn) targetTurn = this.maxTurn;
+
+          // 直前のキーフレームを探す
+          let kf = this.keyframes[0];
+          for (let i = 1; i < this.keyframes.length; i++) {
+            if (this.keyframes[i].turn <= targetTurn) {
+              kf = this.keyframes[i];
+            } else {
+              break;
+            }
+          }
+
+          // キーフレームから復元
+          let parent = new Map(kf.parent);
+          let currentValues = new Map(kf.values);
+          let cost = kf.cost;
+
+          const find = (key) => {
+            let curr = key;
+            while (parent.get(curr) !== curr) curr = parent.get(curr);
+            return curr;
+          };
+
+          // 足りない分をシミュレート
+          for (let k = kf.turn; k < targetTurn; k++) {
+            const op = this.ops[k];
+            const pKey = `${op.px},${op.py}`;
+            const qKey = `${op.qx},${op.qy}`;
+
+            if (!this.validCoords.has(pKey) || !this.validCoords.has(qKey)) continue;
+
+            const rootP = find(pKey);
+            const rootQ = find(qKey);
+            const valP = currentValues.get(rootP);
+            const valQ = currentValues.get(rootQ);
+
+            if (op.t === 1) { // Merge
+              cost += Math.abs(valP - valQ);
+              if (rootP !== rootQ) {
+                parent.set(rootQ, rootP);
+                currentValues.set(rootP, valP + valQ);
+              }
+            } else if (op.t === 2) { // Swap
+              cost += Math.min(valP, valQ);
+              currentValues.set(rootP, valQ);
+              currentValues.set(rootQ, valP);
+            }
+          }
+
+          return { parent, values: currentValues, cost };
+        }
+      }
+
+      // UI & Main Logic
+      const stateManager = new StateManager();
+      const canvas = document.getElementById('mainCanvas');
+      const ctx = canvas.getContext('2d');
+      const slider = document.getElementById('turnSlider');
+      const turnInput = document.getElementById('turnInput');
+      const turnDisplayInfo = document.getElementById('turnDisplayInfo');
+      const scoreDisplay = document.getElementById('scoreDisplay');
+      const errorMsg = document.getElementById('errorMsg');
+      const runtimeErrorMsg = document.getElementById('runtimeErrorMsg');
+      const showNumbersBtn = document.getElementById('showNumbersBtn');
+
+      let isPlaying = false;
+      let animationId = null;
+      let currentTurn = 0;
+      let playbackSpeed = 10; // ops per frame approximately
+
+      // Viewport Variables
+      let viewScale = 1.0;
+      let viewOffsetX = 0;
+      let viewOffsetY = 0;
+      let isDragging = false;
+      let lastMouseX = 0;
+      let lastMouseY = 0;
+
+      // UI Initialization
+      function resizeCanvas() {
+        const container = document.getElementById('canvasContainer');
+        if (!container) return;
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        fitToScreen();
+        draw();
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas()
+
+      // Zoom & Pan Events
+      canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomFactor = 1.1;
+        if (e.deltaY < 0) {
+          viewScale *= zoomFactor;
+        } else {
+          viewScale /= zoomFactor;
+        }
+        viewScale = Math.max(2, Math.min(200, viewScale));
+        draw();
+      });
+
+      canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        canvas.style.cursor = 'grabbing';
+      });
+
+      canvas.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - lastMouseX;
+        const dy = e.clientY - lastMouseY;
+        viewOffsetX += dx;
+        viewOffsetY += dy;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        draw();
+      });
+
+      canvas.addEventListener('mouseup', () => {
+        isDragging = false;
+        canvas.style.cursor = 'grab';
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        isDragging = false;
+        canvas.style.cursor = 'grab';
+      });
+
+      showNumbersBtn.onchange = () => {
+        draw();
+      };
+
+      function fitToScreen() {
+        if (stateManager.coordList.length === 0) return;
+
+        const tempSize = 10;
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+        for (const { i, j } of stateManager.coordList) {
+          const c = getHexCenter(i, j, tempSize, 0, 0);
+          minX = Math.min(minX, c.x);
+          maxX = Math.max(maxX, c.x);
+          minY = Math.min(minY, c.y);
+          maxY = Math.max(maxY, c.y);
+        }
+
+        minX -= tempSize * 2;
+        maxX += tempSize * 2;
+        minY -= tempSize * 2;
+        maxY += tempSize * 2;
+
+        const gridW = maxX - minX;
+        const gridH = maxY - minY;
+
+        const scaleX = canvas.width / gridW;
+        const scaleY = canvas.height / gridH;
+        const finalScale = Math.min(scaleX, scaleY);
+
+        viewScale = tempSize * finalScale;
+
+        let bMinX = Infinity, bMaxX = -Infinity, bMinY = Infinity, bMaxY = -Infinity;
+        for (const { i, j } of stateManager.coordList) {
+          const c = getHexCenter(i, j, 1, 0, 0);
+          bMinX = Math.min(bMinX, c.x);
+          bMaxX = Math.max(bMaxX, c.x);
+          bMinY = Math.min(bMinY, c.y);
+          bMaxY = Math.max(bMaxY, c.y);
+        }
+        const bCenterX = (bMinX + bMaxX) / 2;
+        const bCenterY = (bMinY + bMaxY) / 2;
+
+        viewOffsetX = canvas.width / 2 - bCenterX * viewScale;
+        viewOffsetY = canvas.height / 2 - bCenterY * viewScale;
+      }
+
+
+      // Input Generation
+      function generateData() {
+        const seedVal = document.getElementById('seedInput').value;
+        if (seedVal === '') return;
+
+        const seed = parseInt(seedVal) || 1;
+        const rng = new Random(seed);
+
+        const nums = [];
+        for (let i = 1; i <= MAX_VAL; i++) nums.push(i);
+        rng.shuffle(nums);
+
+        let output = `${N}\n`;
+        let idx = 0;
+        for (let i = 0; i < 2 * N - 1; i++) {
+          const startJ = Math.max(0, i - (N - 1));
+          const endJ = Math.min(2 * N - 2, i + N - 1);
+          const count = endJ - startJ + 1;
+
+          const rowVals = [];
+          for (let c = 0; c < count; c++) {
+            rowVals.push(nums[idx++]);
+          }
+          output += rowVals.join(' ') + '\n';
+        }
+
+        document.getElementById('inputText').value = output;
+      }
+
+      function loadData(shouldFit = true) {
+        try {
+          errorMsg.textContent = "";
+          runtimeErrorMsg.textContent = "";
+          const inputText = document.getElementById('inputText').value;
+          const outputText = document.getElementById('outputText').value;
+
+          if (!inputText.trim()) return;
+
+          const lines = inputText.trim().split(/\n+/);
+          if (lines.length < 2) throw new Error("Input is too short");
+          const nVal = parseInt(lines[0]);
+          if (nVal !== 15) throw new Error("Only N=15 is supported");
+
+          const flatValues = [];
+          for (let i = 1; i < lines.length; i++) {
+            const row = lines[i].trim().split(/\s+/).map(Number);
+            flatValues.push(...row);
+          }
+
+          if (flatValues.length !== MAX_VAL) {
+            throw new Error(`Expected ${MAX_VAL} values, found ${flatValues.length}`);
+          }
+
+          stateManager.initGrid(flatValues);
+          stateManager.loadOps(outputText);
+
+          if (stateManager.runtimeError) {
+            runtimeErrorMsg.textContent = `${stateManager.runtimeError.msg} (turn: ${stateManager.runtimeError.turn})`;
+          }
+
+          const newMax = stateManager.maxTurn;
+          slider.max = newMax;
+          document.getElementById('sliderMaxLabel').textContent = newMax;
+
+          if (currentTurn > newMax) {
+            setTurn(newMax);
+          } else {
+            setTurn(currentTurn);
+          }
+
+          if (shouldFit) {
+            fitToScreen();
+          }
+          draw();
+
+        } catch (e) {
+          errorMsg.textContent = "Error: " + e.message;
+        }
+      }
+
+      const seedInput = document.getElementById('seedInput');
+      const inputText = document.getElementById('inputText');
+      const outputText = document.getElementById('outputText');
+
+      // Event Listeners
+
+      seedInput.oninput = () => {
+        generateData();
+        loadData(true);
+      };
+
+      inputText.oninput = () => loadData(true);
+      outputText.oninput = () => loadData(false); // Maintain zoom/pan when editing output
+
+      // Playback Logic
+      function setTurn(t) {
+        currentTurn = Math.max(0, Math.min(stateManager.maxTurn, t));
+        slider.value = currentTurn;
+        turnInput.value = currentTurn;
+        turnDisplayInfo.textContent = `${currentTurn} / ${stateManager.maxTurn}`;
+        draw();
+      }
+
+      slider.oninput = (e) => {
+        setTurn(parseInt(e.target.value));
+        if (isPlaying) stopAnimation();
+      };
+
+      turnInput.onchange = (e) => {
+        setTurn(parseInt(e.target.value));
+      };
+
+      document.getElementById('prevBtn').onclick = () => {
+        setTurn(currentTurn - 1);
+        if (isPlaying) stopAnimation();
+      };
+
+      document.getElementById('nextBtn').onclick = () => {
+        setTurn(currentTurn + 1);
+        if (isPlaying) stopAnimation();
+      };
+
+      document.getElementById('speedSlider').oninput = (e) => {
+        playbackSpeed = parseInt(e.target.value);
+      };
+
+      const playPauseBtn = document.getElementById('playPauseBtn');
+      const iconPlay = document.getElementById('iconPlay');
+      const iconPause = document.getElementById('iconPause');
+
+      playPauseBtn.onclick = () => {
+        if (isPlaying) {
+          stopAnimation();
+        } else {
+          startAnimation();
+        }
+      };
+
+      function startAnimation() {
+        isPlaying = true;
+        iconPlay.classList.add('hidden');
+        iconPause.classList.remove('hidden');
+
+        let lastTime = performance.now();
+        let accumulator = 0;
+
+        const loop = (time) => {
+          if (!isPlaying) return;
+
+          const dt = time - lastTime;
+          lastTime = time;
+
+          let turnsPerSec = 1;
+          if (playbackSpeed <= 50) {
+            turnsPerSec = playbackSpeed * 1.2;
+          } else {
+            turnsPerSec = 60 + (playbackSpeed - 50) * 20;
+          }
+
+          accumulator += dt * (turnsPerSec / 1000);
+
+          let step = Math.floor(accumulator);
+          if (step > 0) {
+            if (currentTurn + step >= stateManager.maxTurn) {
+              setTurn(stateManager.maxTurn);
+              stopAnimation();
+              return;
+            }
+            setTurn(currentTurn + step);
+            accumulator -= step;
+          }
+
+          animationId = requestAnimationFrame(loop);
+        };
+        animationId = requestAnimationFrame(loop);
+      }
+
+      function stopAnimation() {
+        isPlaying = false;
+        iconPlay.classList.remove('hidden');
+        iconPause.classList.add('hidden');
+        if (animationId) cancelAnimationFrame(animationId);
+      }
+
+      // Drawing Logic
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (stateManager.coordList.length === 0) return;
+
+        const { parent, values, cost } = stateManager.getState(currentTurn);
+        scoreDisplay.textContent = cost;
+
+        const find = (key) => {
+          let curr = key;
+          while (parent.get(curr) !== curr) curr = parent.get(curr);
+          return curr;
+        };
+
+        // Determine color scale
+        let currentMax = 1;
+        let currentMin = Infinity;
+        for (let val of values.values()) {
+          if (val > currentMax) currentMax = val;
+          if (val < currentMin) currentMin = val;
+        }
+
+        const regionData = new Map();
+
+        ctx.lineWidth = 1;
+
+        // Draw Hexagons
+        for (const { i, j } of stateManager.coordList) {
+          const key = `${i},${j}`;
+          const root = find(key);
+          const val = values.get(root);
+
+          const center = getHexCenter(i, j, viewScale, viewOffsetX, viewOffsetY);
+
+          if (!regionData.has(root)) {
+            regionData.set(root, { hexes: [], val: val });
+          }
+          regionData.get(root).hexes.push(center);
+
+          const ratio = Math.max(0, Math.min(1, (val - currentMin) / (currentMax - currentMin || 1)));
+          const hue = 240 * (1 - ratio);
+
+          ctx.fillStyle = `hsla(${hue}, 80%, 60%, 1)`;
+          ctx.strokeStyle = '#fff';
+
+          ctx.beginPath();
+          for (let k = 0; k < 6; k++) {
+            const angle = Math.PI / 180 * (60 * k - 30);
+            const vx = center.x + viewScale * Math.cos(angle);
+            const vy = center.y + viewScale * Math.sin(angle);
+            if (k === 0) ctx.moveTo(vx, vy);
+            else ctx.lineTo(vx, vy);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+          ctx.stroke();
+        }
+
+        // Draw Region Borders
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#333';
+
+        const neighbors = [
+          { di: 0, dj: 1, edge: 0 },
+          { di: 1, dj: 1, edge: 1 },
+          { di: 1, dj: 0, edge: 2 },
+          { di: 0, dj: -1, edge: 3 },
+          { di: -1, dj: -1, edge: 4 },
+          { di: -1, dj: 0, edge: 5 }
+        ];
+
+        for (const { i, j } of stateManager.coordList) {
+          const key = `${i},${j}`;
+          const root = find(key);
+          const center = getHexCenter(i, j, viewScale, viewOffsetX, viewOffsetY);
+
+          for (const n of neighbors) {
+            const ni = i + n.di;
+            const nj = j + n.dj;
+            const nKey = `${ni},${nj}`;
+
+            let drawBorder = false;
+            if (stateManager.validCoords.has(nKey)) {
+              const nRoot = find(nKey);
+              if (root !== nRoot) drawBorder = true;
+            } else {
+              drawBorder = true;
+            }
+
+            if (drawBorder) {
+              drawEdge(center, viewScale, n.edge);
+            }
+          }
+        }
+
+        // Draw Text
+        if (showNumbersBtn.checked && viewScale > 5) {
+          ctx.fillStyle = 'black'; // Black color
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          for (const rd of regionData.values()) {
+            const text = rd.val.toString();
+
+            // 領域のサイズに基づいてフォントサイズを計算
+            const count = rd.hexes.length;
+            const areaScale = Math.sqrt(count);
+
+            // ベースサイズ：viewScale * 0.6 * areaScale
+            let fontSize = viewScale * 0.6 * areaScale;
+
+            // 最大幅も領域サイズに応じて広げる
+            const maxWidth = viewScale * 1.7 * areaScale * 0.9;
+
+            ctx.font = `bold ${fontSize}px sans-serif`;
+            const textWidth = ctx.measureText(text).width;
+
+            if (textWidth > maxWidth) {
+              fontSize = fontSize * (maxWidth / textWidth);
+            }
+
+            ctx.font = `bold ${fontSize}px sans-serif`;
+
+            let sumX = 0, sumY = 0;
+            for (const h of rd.hexes) { sumX += h.x; sumY += h.y; }
+            const cx = sumX / rd.hexes.length;
+            const cy = sumY / rd.hexes.length;
+
+            let bestHex = rd.hexes[0];
+            let minDSq = Infinity;
+            for (const h of rd.hexes) {
+              const dSq = (h.x - cx) ** 2 + (h.y - cy) ** 2;
+              if (dSq < minDSq) {
+                minDSq = dSq;
+                bestHex = h;
+              }
+            }
+
+            ctx.fillText(text, bestHex.x, bestHex.y);
+          }
+        }
+      }
+
+      function drawEdge(center, size, k) {
+        const angle1 = Math.PI / 180 * (60 * k - 30);
+        const angle2 = Math.PI / 180 * (60 * ((k + 1) % 6) - 30);
+
+        const x1 = center.x + size * Math.cos(angle1);
+        const y1 = center.y + size * Math.sin(angle1);
+        const x2 = center.x + size * Math.cos(angle2);
+        const y2 = center.y + size * Math.sin(angle2);
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+
+      // Init
+      generateData();
+      loadData(true);
+
+    })();
+  </script>
+</body>
+
+</html>
