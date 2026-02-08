@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Updates - Googology Fan</title>
+  <link rel="stylesheet" href="../css/default.css" />
+</head>
+
+<body>
+  <div id="header-container"></div>
+  <div id="main-container">
+    <main>
+      <h2>Updates</h2>
+      <p>このページは便利ツールをまとめる場所です。<br />
+        バグ報告や改善要望、作成希望はDMにお願いします。</p> <br />
+      <ul>
+        <h2><a href="./tools/AtCoder_rate_diff.html">AtCoder Rate Diff</a></h2>
+        <hr />
+        <li>2人のAtCoderユーザーのレート差の推移をグラフで可視化します。</li>
+        <li>Geminiのflashに作らせたので不具合が多いかもしれません。</li>
+      </ul>
+    </main>
+  </div>
+  <div id="footer-container"></div>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      fetch("../common/header.html")
+        .then((res) => {
+          if (!res.ok) throw new Error("header.html fetch failed");
+          return res.text();
+        })
+        .then((html) => {
+          document.getElementById("header-container").innerHTML = html;
+          const temp = document.createElement("div");
+          temp.innerHTML = html;
+          const style = temp.querySelector("style");
+          if (style) document.head.appendChild(style);
+        })
+        .catch((e) => {
+          document.getElementById("header-container").innerHTML =
+            '<div style="color:red">ヘッダの読み込みに失敗しました: ' +
+            e.message +
+            "</div>";
+        });
+      fetch("../common/footer.html")
+        .then((res) => {
+          if (!res.ok) throw new Error("footer.html fetch failed");
+          return res.text();
+        })
+        .then((html) => {
+          document.getElementById("footer-container").innerHTML = html;
+          const temp = document.createElement("div");
+          temp.innerHTML = html;
+          const style = temp.querySelector("style");
+          if (style) document.head.appendChild(style);
+        })
+        .catch((e) => {
+          document.getElementById("footer-container").innerHTML =
+            '<div style="color:red">フッタの読み込みに失敗しました: ' +
+            e.message +
+            "</div>";
+        });
+    });
+  </script>
+</body>
+
+</html>

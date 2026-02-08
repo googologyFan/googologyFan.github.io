@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AtCoder Rate Diff</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+    }
+
+    .loading-spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border-left-color: #3b82f6;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+  <div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <header class="text-center mb-10">
+      <h1 class="text-3xl font-bold text-slate-800 mb-2">AtCoder Rate Diff</h1>
+      <p class="text-slate-500 text-sm">2人のユーザーのレート差の推移を可視化します</p>
+    </header>
+
+    <!-- Input Section -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">User 1 (基準)</label>
+          <input type="text" id="user1" placeholder="tourist"
+            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">User 2 (比較対象)</label>
+          <input type="text" id="user2" placeholder="chokudai"
+            class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+        </div>
+        <div class="flex items-end">
+          <button id="compare-btn"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors shadow-sm">
+            比較する
+          </button>
+        </div>
+      </div>
+      <p id="error-msg"
+        class="text-red-500 text-sm mt-3 hidden whitespace-pre-wrap p-3 bg-red-50 rounded-lg border border-red-100"></p>
+    </div>
+
+    <!-- Chart Section -->
+    <div id="result-container" class="hidden">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <p class="text-xs font-semibold text-slate-400 uppercase">現在の差</p>
+          <h2 id="current-diff" class="text-3xl font-bold mt-1 text-slate-800">0</h2>
+        </div>
+        <div id="user1-stat"
+          class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-blue-500">
+          <p id="user1-label" class="text-xs font-semibold text-slate-400 uppercase text-ellipsis overflow-hidden">User
+            1</p>
+          <h2 id="user1-rate" class="text-3xl font-bold mt-1 text-slate-800">-</h2>
+        </div>
+        <div id="user2-stat"
+          class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-red-500">
+          <p id="user2-label" class="text-xs font-semibold text-slate-400 uppercase text-ellipsis overflow-hidden">User
+            2</p>
+          <h2 id="user2-rate" class="text-3xl font-bold mt-1 text-slate-800">-</h2>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="font-bold text-slate-700">レート差の遷移 (User1 - User2)</h3>
+          <span class="text-xs text-slate-400 px-2 py-1 bg-slate-100 rounded">Time Series</span>
+        </div>
+        <div class="relative h-[400px]">
+          <canvas id="diffChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center hidden z-50">
+      <div class="flex flex-col items-center">
+        <div class="loading-spinner mb-4"></div>
+        <p class="text-slate-600 font-medium">データを取得中...</p>
+        <p id="loading-status" class="text-slate-400 text-xs mt-2">プロキシ経由で接続を試みています</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let myChart = null;
+
+    document.getElementById('compare-btn').addEventListener('click', async () => {
+      const user1 = document.getElementById('user1').value.trim();
+      const user2 = document.getElementById('user2').value.trim();
+      const errorMsg = document.getElementById('error-msg');
+      const loading = document.getElementById('loading');
+      const resultContainer = document.getElementById('result-container');
+
+      if (!user1 || !user2) {
+        showError("両方のユーザーIDを入力してください。");
+        return;
+      }
+
+      errorMsg.classList.add('hidden');
+      loading.classList.remove('hidden');
+      resultContainer.classList.add('hidden');
+
+      try {
+        // 順次取得することでプロキシへの負荷を分散
+        updateStatus(`${user1} のデータを取得中...`);
+        const data1 = await fetchHistoryWithRetry(user1);
+
+        updateStatus(`${user2} のデータを取得中...`);
+        const data2 = await fetchHistoryWithRetry(user2);
+
+        processAndRender(user1, user2, data1, data2);
+        resultContainer.classList.remove('hidden');
+      } catch (err) {
+        console.error("Final Error:", err);
+        showError(`取得エラー: ${err.message}\n\n【解決策】\n1. IDが正しいか確認してください。\n2. 少し待ってから再度お試しください。\n3. ブラウザの拡張機能（広告ブロック等）をオフにしてみてください。`);
+      } finally {
+        loading.classList.add('hidden');
+      }
+    });
+
+    function updateStatus(text) {
+      document.getElementById('loading-status').textContent = text;
+    }
+
+    function showError(text) {
+      const errorMsg = document.getElementById('error-msg');
+      errorMsg.textContent = text;
+      errorMsg.classList.remove('hidden');
+    }
+
+    async function fetchHistoryWithRetry(username) {
+      const url = `https://atcoder.jp/users/${username}/history/json`;
+
+      // 信頼性の高いプロキシのリスト
+      const proxyGenerators = [
+        (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+        (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}&disableCache=true`
+      ];
+
+      let lastError = null;
+
+      for (const getProxy of proxyGenerators) {
+        const proxyUrl = getProxy(url);
+        try {
+          const response = await fetch(proxyUrl, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+          });
+
+          if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+          let history;
+          if (proxyUrl.includes('allorigins')) {
+            const json = await response.json();
+            if (!json.contents) continue;
+            history = JSON.parse(json.contents);
+          } else {
+            history = await response.json();
+          }
+
+          if (Array.isArray(history)) return history;
+        } catch (e) {
+          console.warn(`Proxy failed: ${proxyUrl}`, e);
+          lastError = e;
+          continue; // 次のプロキシを試す
+        }
+      }
+
+      throw new Error(`プロキシ経由の通信に失敗しました。時間をおいて再度お試しください。 (${username})`);
+    }
+
+    function processAndRender(u1, u2, h1, h2) {
+      const allTimes = Array.from(new Set([
+        ...h1.map(e => e.EndTime),
+        ...h2.map(e => e.EndTime)
+      ])).sort();
+
+      let currentRate1 = 0;
+      let currentRate2 = 0;
+      const diffData = [];
+      const labels = [];
+
+      allTimes.forEach(time => {
+        const entry1 = h1.find(e => e.EndTime === time);
+        const entry2 = h2.find(e => e.EndTime === time);
+
+        if (entry1) currentRate1 = entry1.NewRating;
+        if (entry2) currentRate2 = entry2.NewRating;
+
+        if (currentRate1 > 0 || currentRate2 > 0) {
+          labels.push(new Date(time).toLocaleDateString());
+          diffData.push(currentRate1 - currentRate2);
+        }
+      });
+
+      if (diffData.length === 0) throw new Error("コンテスト履歴が見つかりませんでした。");
+
+      document.getElementById('user1-label').textContent = u1;
+      document.getElementById('user2-label').textContent = u2;
+      document.getElementById('user1-rate').textContent = currentRate1;
+      document.getElementById('user2-rate').textContent = currentRate2;
+
+      const diff = currentRate1 - currentRate2;
+      const diffEl = document.getElementById('current-diff');
+      diffEl.textContent = (diff > 0 ? "+" : "") + diff;
+      diffEl.className = `text-3xl font-bold mt-1 ${diff >= 0 ? 'text-blue-600' : 'text-red-600'}`;
+
+      renderChart(labels, diffData, u1, u2);
+    }
+
+    function renderChart(labels, data, u1, u2) {
+      const ctx = document.getElementById('diffChart').getContext('2d');
+      if (myChart) myChart.destroy();
+
+      myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `差分 (${u1} - ${u2})`,
+            data: data,
+            borderColor: '#3b82f6',
+            borderWidth: 2,
+            fill: {
+              target: 'origin',
+              above: 'rgba(59, 130, 246, 0.1)',
+              below: 'rgba(239, 68, 68, 0.1)'
+            },
+            tension: 0.2,
+            pointRadius: labels.length > 50 ? 0 : 2,
+            pointHoverRadius: 5,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: { ticks: { autoSkip: true, maxTicksLimit: 8 } },
+            y: { title: { display: true, text: 'レート差' } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>
