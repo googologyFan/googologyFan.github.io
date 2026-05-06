@@ -4,8 +4,28 @@ function convertMarkdown(parent, content) {
   var section = [];
   var blockquote;
   var inBlockquote = false;
+  var headingIds = {};
   for (var i = 0; i < content.length; i++) {
     if (content[i][0] !== `>`) inBlockquote = false;
+    if (content[i] === "```") {
+      var endIndex = -1;
+      for (var k = i + 1; k < content.length; k++) {
+        if (content[k] === "```") {
+          endIndex = k;
+          break;
+        }
+      }
+      if (endIndex !== -1) {
+        var codeText = content.slice(i + 1, endIndex).join("\n");
+        const pre = document.createElement("pre");
+        const code = document.createElement("code");
+        code.innerText = codeText;
+        pre.appendChild(code);
+        parent.appendChild(pre);
+        i = endIndex;
+        continue;
+      }
+    }
     switch (content[i][0]) {
       case "1": {
         if (content[i].startsWith("1.")) {
@@ -25,6 +45,13 @@ function convertMarkdown(parent, content) {
           for (var j = 0; j < Math.min(depth, 3); j++) str += "#";
           str += " ";
           for (var j = 0; j < depth; j++) str += section[j] + ".";
+          headingIds[i] =
+            "section-" +
+            section
+              .map(function (value) {
+                return ("000" + value).slice(-3);
+              })
+              .join("-");
           content[i] = str + content[i].slice(2 * depth);
           i--;
           continue;
@@ -69,6 +96,9 @@ function convertMarkdown(parent, content) {
           continue;
         }
         const h = document.createElement(`h${hLevel}`);
+        if (headingIds[i]) {
+          h.id = headingIds[i];
+        }
         convertMarkdownString(h, content[i].slice(hLevel + 1));
         parent.appendChild(h);
         break;
@@ -128,6 +158,22 @@ function convertMarkdownString(parent, str) {
     aligned.setAttribute("class", "align-" + match[1]);
     convertMarkdownString(aligned, match[2]);
     parent.appendChild(aligned);
+    return;
+  }
+  // インライン数式: $...$ -> \( ... \)
+  match = str.match(/\$(.+?)\$/);
+  if (match) {
+    const before = str.substring(0, match.index);
+    if (before) {
+      convertMarkdownString(parent, before);
+    }
+
+    const math = document.createElement("span");
+    math.innerText = "\\(" + match[1] + "\\)";
+    parent.appendChild(math);
+
+    const after = str.substring(match.index + match[0].length);
+    convertMarkdownString(parent, after);
     return;
   }
   if (str[0] === "\\") str = str.slice(1);
@@ -234,8 +280,25 @@ function convertMarkdownString(parent, str) {
     return;
   }
 
+  // 等幅: ```text```
+  match = str.match(/```(.*?)```/);
+  if (match) {
+    const before = str.substring(0, match.index);
+    if (before) {
+      parent.appendChild(document.createTextNode(before));
+    }
+
+    const code = document.createElement("code");
+    code.innerText = match[1];
+    parent.appendChild(code);
+
+    const after = str.substring(match.index + match[0].length);
+    convertMarkdownString(parent, after);
+    return;
+  }
+
   // インラインコード: `code`
-  match = str.match(/`(.*?)`/);
+  match = str.match(/`([^`]+)`/);
   if (match) {
     const before = str.substring(0, match.index);
     if (before) {
