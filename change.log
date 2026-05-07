@@ -9,8 +9,7 @@ ver 1.2.0
   Toolsを追加。
   AtCoder Rate Diffを追加。
 
-ver 1.3.0
-  NDPC解説執筆中。
-
-ver 1.3.1
-  NDPC-A完成。updates.htmlに追加。
+ver 1.3
+.0 - NDPC解説執筆中。
+.1 - NDPC-A完成。updates.htmlに追加。
+.2 - NDPC-B完成。タイトル表示・NDPC-Aの追記・Diary編集時のデバッグモード？を追加・章毎の改行の数2→4

@@ -1,5 +1,8 @@
 "use strict";
 
+const debugging = false;
+// debugging = true;
+
 /**
  * id(string) is the id of parent element.
  *
@@ -19,16 +22,13 @@ function setup(id, data) {
     return elem;
   }
 
-  const latexScript = document.createElement("script");
-  latexScript.setAttribute("src", "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js");
-  head.appendChild(latexScript);
-  const codeHighlightScript = document.createElement("script");
-  codeHighlightScript.setAttribute("src", "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js");
-  const codeHighlightStyle = document.createElement("link");
-  codeHighlightStyle.setAttribute("rel", "stylesheet");
-  codeHighlightStyle.setAttribute("href", "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css");
-  head.appendChild(codeHighlightScript);
-  head.appendChild(codeHighlightStyle);
+  // const codeHighlightScript = document.createElement("script");
+  // codeHighlightScript.setAttribute("src", "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js");
+  // const codeHighlightStyle = document.createElement("link");
+  // codeHighlightStyle.setAttribute("rel", "stylesheet");
+  // codeHighlightStyle.setAttribute("href", "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css");
+  // head.appendChild(codeHighlightScript);
+  // head.appendChild(codeHighlightStyle);
 
   if (data.title != undefined) {
     const title = document.createElement("title");
@@ -116,6 +116,16 @@ function setup(id, data) {
 
     head.appendChild(mdScript);
   }
+
+  const timer = setTimeout(function () {
+    const latexScript = document.createElement("script");
+    latexScript.setAttribute("src", "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js");
+    head.appendChild(latexScript);
+
+    if (debugging)
+      scrollTo(0, 1000000);
+  }, 1000);
+
 }
 
 function applyStyle1(id) {
