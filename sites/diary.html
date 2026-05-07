@@ -1,62 +1,66 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>History - Googology Fan</title>
-    <link rel="stylesheet" href="../css/default.css" />
-  </head>
-  <body>
-    <div id="header-container"></div>
-    <div id="main-container">
-      <main>
-        <h2>Diary</h2>
-        <p>このページは日記をまとめる場所です。</p>
-        <ul>
-          <li><a href="./diary/25_10_13.html">高専プロコン2025参加記</a></li>
-        </ul>
-      </main>
-    </div>
-    <div id="footer-container"></div>
-    <script>
-      window.addEventListener("DOMContentLoaded", () => {
-        fetch("../common/header.html")
-          .then((res) => {
-            if (!res.ok) throw new Error("header.html fetch failed");
-            return res.text();
-          })
-          .then((html) => {
-            document.getElementById("header-container").innerHTML = html;
-            const temp = document.createElement("div");
-            temp.innerHTML = html;
-            const style = temp.querySelector("style");
-            if (style) document.head.appendChild(style);
-          })
-          .catch((e) => {
-            document.getElementById("header-container").innerHTML =
-              '<div style="color:red">ヘッダの読み込みに失敗しました: ' +
-              e.message +
-              "</div>";
-          });
-        fetch("../common/footer.html")
-          .then((res) => {
-            if (!res.ok) throw new Error("footer.html fetch failed");
-            return res.text();
-          })
-          .then((html) => {
-            document.getElementById("footer-container").innerHTML = html;
-            const temp = document.createElement("div");
-            temp.innerHTML = html;
-            const style = temp.querySelector("style");
-            if (style) document.head.appendChild(style);
-          })
-          .catch((e) => {
-            document.getElementById("footer-container").innerHTML =
-              '<div style="color:red">フッタの読み込みに失敗しました: ' +
-              e.message +
-              "</div>";
-          });
-      });
-    </script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>History - Googology Fan</title>
+  <link rel="stylesheet" href="../css/default.css" />
+</head>
+
+<body>
+  <div id="header-container"></div>
+  <div id="main-container">
+    <main>
+      <h2>Diary</h2>
+      <p>このページは日記をまとめる場所です。</p>
+      <ul>
+        <li><a href="./diary/26_05_05.html">NDPCの個人的解説</a></li>
+        <li><a href="./diary/25_10_13.html">高専プロコン2025参加記</a></li>
+      </ul>
+    </main>
+  </div>
+  <div id="footer-container"></div>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      fetch("../common/header.html")
+        .then((res) => {
+          if (!res.ok) throw new Error("header.html fetch failed");
+          return res.text();
+        })
+        .then((html) => {
+          document.getElementById("header-container").innerHTML = html;
+          const temp = document.createElement("div");
+          temp.innerHTML = html;
+          const style = temp.querySelector("style");
+          if (style) document.head.appendChild(style);
+        })
+        .catch((e) => {
+          document.getElementById("header-container").innerHTML =
+            '<div style="color:red">ヘッダの読み込みに失敗しました: ' +
+            e.message +
+            "</div>";
+        });
+      fetch("../common/footer.html")
+        .then((res) => {
+          if (!res.ok) throw new Error("footer.html fetch failed");
+          return res.text();
+        })
+        .then((html) => {
+          document.getElementById("footer-container").innerHTML = html;
+          const temp = document.createElement("div");
+          temp.innerHTML = html;
+          const style = temp.querySelector("style");
+          if (style) document.head.appendChild(style);
+        })
+        .catch((e) => {
+          document.getElementById("footer-container").innerHTML =
+            '<div style="color:red">フッタの読み込みに失敗しました: ' +
+            e.message +
+            "</div>";
+        });
+    });
+  </script>
+</body>
+
 </html>
