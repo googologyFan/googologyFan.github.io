@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <style>
+    .all {
+      color: #ffffff;
+      font-size: 20px;
+      font-family: "MS Serif", "BIZ UDMincho";
+      margin: 0px;
+    }
+
+    body {
+      padding: 20px;
+      background-color: #111111;
+    }
+
+    textarea,
+    input {
+      background-color: #222222;
+      padding: 5px;
+      border: 1px solid #ffffff;
+    }
+
+    br {
+      height: 0px;
+    }
+
+    .input-verysmall {
+      width: 50px;
+    }
+
+    .input-small {
+      width: 100px;
+    }
+
+    .input-midium {
+      width: 200px;
+    }
+
+    .input-large {
+      width: 400px;
+    }
+
+    .square {
+      width: 30px;
+      height: 30px;
+      align-items: center;
+      line-height: 0px;
+    }
+
+    .square:hover {
+      background-color: #444444;
+      cursor: pointer;
+    }
+
+    .table1,
+    .table1 tr,
+    .table1 td {
+      border: 1px solid #ffffff;
+      padding: 5px;
+      border-collapse: collapse;
+    }
+
+    .no-border {
+      border: none;
+    }
+  </style>
+
+  <script>
+    function init() {
+      document.querySelectorAll("*").forEach((element) => {
+        element.classList.add("all");
+      });
+    }
+    function createElement(tag) {
+      const element = document.createElement(tag);
+      element.classList.add("all");
+      return element;
+    }
+    function add_table(table) {
+      const statusDiv = document.getElementById(table);
+      const newRow = createElement("tr");
+      const newName = createElement("td");
+      const newValue = createElement("td");
+      const newLowerLimit = createElement("td");
+      const newUpperLimit = createElement("td");
+      const Others = createElement("td");
+
+      const nameInput = createElement("input");
+      nameInput.type = "text";
+      nameInput.classList.add("input-midium");
+      nameInput.classList.add("no-border");
+      newName.appendChild(nameInput);
+
+      const valueInput = createElement("input");
+      valueInput.type = "number";
+      valueInput.classList.add("input-verysmall");
+      valueInput.classList.add("no-border");
+      newValue.appendChild(valueInput);
+
+      const lowerLimitInput = createElement("input");
+      lowerLimitInput.type = "number";
+      lowerLimitInput.classList.add("input-verysmall");
+      lowerLimitInput.classList.add("no-border");
+      lowerLimitInput.value = 0;
+      newLowerLimit.appendChild(lowerLimitInput);
+
+      const upperLimitInput = createElement("input");
+      upperLimitInput.type = "number";
+      upperLimitInput.classList.add("input-verysmall");
+      upperLimitInput.classList.add("no-border");
+      upperLimitInput.value = 100;
+      newUpperLimit.appendChild(upperLimitInput);
+
+      const randomBtn = createElement("input");
+      randomBtn.type = "button";
+      randomBtn.value = "R";
+      randomBtn.classList.add("square");
+      randomBtn.onclick = function () {
+        const lowerLimit = parseInt(lowerLimitInput.value);
+        const upperLimit = parseInt(upperLimitInput.value);
+        const randomValue = Math.floor(Math.random() * (upperLimit - lowerLimit + 1)) + lowerLimit;
+        valueInput.value = randomValue;
+      };
+      Others.appendChild(randomBtn);
+      const deleteBtn = createElement("input");
+      deleteBtn.type = "button";
+      deleteBtn.value = "－";
+      deleteBtn.classList.add("square");
+      deleteBtn.onclick = function () {
+        statusDiv.removeChild(newRow);
+      };
+      Others.appendChild(deleteBtn);
+
+      newRow.appendChild(newName);
+      newRow.appendChild(newValue);
+      newRow.appendChild(newLowerLimit);
+      newRow.appendChild(newUpperLimit);
+      newRow.appendChild(Others);
+      statusDiv.appendChild(newRow);
+    }
+
+    function getTableData(table) {
+      const tableElement = document.getElementById(table);
+      const rows = Array.from(tableElement.rows).slice(1);
+      return rows
+        .map((row) => {
+          const name = row.cells[0].firstChild.value;
+          const value = row.cells[1].firstChild.value;
+          const lowerLimit = row.cells[2].firstChild.value;
+          const upperLimit = row.cells[3].firstChild.value;
+          return `${name}：${value}：${lowerLimit}：${upperLimit}`;
+        })
+        .join("\n");
+    }
+    function input() {
+      const nameLast = document.getElementById("name-last");
+      const nameFirst = document.getElementById("name-first");
+      const age = document.getElementById("age");
+      const gender = document.getElementById("gender");
+      const race = document.getElementById("race");
+      const job = document.getElementById("job");
+      const note = document.getElementById("note");
+      navigator.clipboard.readText().then((text) => {
+        const lines = text.split(/\r?\n/);
+        const sections = { status: [], base: [], note: [] };
+        let section = null;
+
+        document.querySelectorAll("#status tr:not(:first-child), #base tr:not(:first-child)").forEach((row) => row.remove());
+
+        lines.forEach((line) => {
+          const trimmedLine = line.trim();
+          if (!trimmedLine) {
+            return;
+          }
+
+          const separatorIndex = trimmedLine.indexOf("：");
+          if (separatorIndex < 0) {
+            if (trimmedLine === "ステータス") {
+              section = "status";
+            } else if (trimmedLine === "技能") {
+              section = "base";
+            } else if (trimmedLine === "備考") {
+              section = "note";
+            } else if (section === "note") {
+              sections.note.push(trimmedLine);
+            }
+            return;
+          }
+
+          const label = trimmedLine.slice(0, separatorIndex).trim();
+          const value = trimmedLine.slice(separatorIndex + 1).trim();
+          if (label === "ステータス") {
+            section = "status";
+          } else if (label === "技能") {
+            section = "base";
+          } else if (label === "備考") {
+            section = "note";
+          } else if (section === "note") {
+            sections.note.push(trimmedLine);
+          } else if (label === "名前") {
+            const names = value.split(/\s+/);
+            nameLast.value = names[0] || "";
+            nameFirst.value = names.slice(1).join(" ");
+          } else if (label === "年齢") {
+            age.value = value;
+          } else if (label === "性別") {
+            gender.value = value;
+          } else if (label === "種族") {
+            race.value = value;
+          } else if (label === "職業") {
+            job.value = value;
+          } else if (section === "status" || section === "base") {
+            const values = trimmedLine.split("：");
+            sections[section].push([
+              values[0] || "",
+              values[1] || "",
+              values[2] || "",
+              values[3] || ""
+            ]);
+          }
+        });
+
+        ["status", "base"].forEach((table) => {
+          sections[table].forEach(([label, value, lowerLimit, upperLimit]) => {
+            add_table(table);
+            const row = document.getElementById(table).lastElementChild;
+            row.cells[0].firstChild.value = label;
+            row.cells[1].firstChild.value = value;
+            row.cells[2].firstChild.value = lowerLimit;
+            row.cells[3].firstChild.value = upperLimit;
+          });
+        });
+        note.value = sections.note.join("\n").replace(/^備考：\s*/, "");
+      });
+    }
+    function output() {
+      const nameLast = document.getElementById("name-last").value;
+      const nameFirst = document.getElementById("name-first").value;
+      const age = document.getElementById("age").value;
+      const gender = document.getElementById("gender").value;
+      const race = document.getElementById("race").value;
+      const job = document.getElementById("job").value;
+      const note = document.getElementById("note").value;
+      navigator.clipboard.writeText(
+        `名前：${nameLast} ${nameFirst}\n年齢：${age}\n性別：${gender}\n種族：${race}\n職業：${job}\n\nステータス：\n${getTableData("status")}\n技能：\n${getTableData("base")}\n\n備考：\n${note}`
+      );
+    }
+  </script>
+</head>
+
+<body onload="init()">
+  <input type="button" class="button1" onclick="input()" value="クリップボードから入力" />
+  <input type="button" class="button1" onclick="output()" value="クリップボードに出力" />
+  <br /> <br /> <br /> <br />
+
+  名前：<input type="text" class="input-midium" id="name-last" />
+  　<input type="text" class="input-midium" id="name-first" />
+  　年齢：<input type="number" class="input-small" id="age" />
+  　性別：<input type="text" class="input-small" id="gender" />
+  <br /> <br />
+  種族：<input type="text" class="input-midium" id="race" />
+  <br /> <br />
+  職業：<input type="text" class="input-midium" id="job" />
+  <br /> <br />
+  ステータス
+  <div id="status-env">
+    <table id="status" class="table1">
+      <tr>
+        <td>ステータス名</td>
+        <td>能力値</td>
+        <td>下限</td>
+        <td>上限</td>
+      </tr>
+    </table>
+    <input type="button" onclick="add_table('status')" class="square" value="+" />
+  </div>
+  <br />
+  技能
+  <div id="base-env">
+    <table id="base" class="table1">
+      <tr>
+        <td>技能名</td>
+        <td>技能値</td>
+        <td>下限</td>
+        <td>上限</td>
+      </tr>
+    </table>
+    <input type="button" onclick="add_table('base')" class="square" value="+" />
+  </div>
+
+  <br />
+  備考
+  <br />
+  <textarea id="note" class="input-large" rows="5"></textarea>
+</body>
+
+</html>
